@@ -1,0 +1,20 @@
+.control-panel {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem;
+
+  .controls {
+    display: flex;
+    width: 300px;
+    justify-content: space-between;
+    align-items: center;
+
+    .icon {
+      width: 24px;
+      height: auto;
+      color: #eeeeee;
+    }
+  }
+}

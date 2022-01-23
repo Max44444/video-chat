@@ -1,0 +1,28 @@
+.control-button {
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  position: relative;
+  border: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .name {
+    position: absolute;
+    width: 80px;
+    display: block;
+    bottom: -23px;
+    left: -10px;
+    font-weight: lighter;
+    font-size: 0.9rem;
+  }
+}
+
+.control-on {
+  background-color: #aaaaaa;
+}
+
+.control-off {
+  background-color: #f17070;
+}

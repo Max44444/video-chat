@@ -1,0 +1,17 @@
+.video-container {
+  height: 100%;
+  position: relative;
+  object-fit: cover;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  video {
+    height: 100%;
+    margin: 0;
+    border: 0;
+  }
+}
