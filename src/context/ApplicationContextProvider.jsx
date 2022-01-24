@@ -13,13 +13,16 @@ export const ApplicationContextProvider = ({children}) => {
 
     const [showVideo, setShowVideo] = useState(true)
     const [isUnMuted, setIsUnMuted] = useState(true)
+    const [createdRoomID, setCreatedRoomID] = useState(null)
 
     const context = {
         socket,
         showVideo,
         setShowVideo,
         isUnMuted,
-        setIsUnMuted
+        setIsUnMuted,
+        createdRoomID,
+        setCreatedRoomID
     }
 
     return (

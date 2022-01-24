@@ -9,16 +9,19 @@ import {
     RELAY_SDP,
     SESSION_DESCRIPTION,
     ICE_CANDIDATE,
-    REMOVE_PEER
+    REMOVE_PEER,
+    DISCONNECTED,
+    DELETE_USER
 } from '../socket/socket-actions'
 import freeice from 'freeice'
+import { useNavigate } from 'react-router';
 
 export const LOCAL_VIDEO = 'LOCAL_VIDEO'
 
 export const useWebRTC = (roomID) => {
     const { socket } = useContext(ApplicationContext)
     const [clients, updateClients] = useStateWithCallback([])
-    const [localTracks, setLocalTracks] = useState([]);
+    const navigate = useNavigate()
 
     const addNewClient = useCallback((newClient, cb) => {
         updateClients(list => {
@@ -167,8 +170,6 @@ export const useWebRTC = (roomID) => {
                 }
             })
 
-            setLocalTracks(localMediaStream.current.getTracks())
-
             addNewClient(LOCAL_VIDEO, () => {
                 const localVideoElement = peerMediaElements.current[LOCAL_VIDEO]
 
@@ -186,6 +187,17 @@ export const useWebRTC = (roomID) => {
         return leaveTheRoom
     }, [roomID])
 
+    useEffect(() => {
+        const handleDisconnected = () => {
+            localMediaStream.current.getTracks().forEach(track => track.stop())
+            navigate("/")
+        }
+
+        socket.on(DISCONNECTED, handleDisconnected)
+
+        return () => socket.off(DISCONNECTED)
+    }, [])
+
     const provideMediaRef = useCallback((id, node) => {
         peerMediaElements.current[id] = node
     }, [])
@@ -202,11 +214,16 @@ export const useWebRTC = (roomID) => {
         }
     }
 
+    const deleteUserFromRoom = ({ userID, roomID }) => {
+        socket.emit(DELETE_USER, { userID, roomID })
+    }
+
     return {
         clients,
         provideMediaRef,
         toggleAudio,
         toggleVideo,
-        leaveTheRoom
+        leaveTheRoom,
+        deleteUserFromRoom
     }
 }

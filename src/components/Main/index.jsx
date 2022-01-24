@@ -12,7 +12,7 @@ RoomItem.propTypes = {
 };
 export const Main = () => {
     const navigate = useNavigate()
-    const { socket } = useContext(ApplicationContext)
+    const { socket, setCreatedRoomID } = useContext(ApplicationContext)
     const [rooms, updateRooms] = useState([])
     const rootNode = useRef()
 
@@ -23,6 +23,12 @@ export const Main = () => {
             }
         })
     })
+
+    const handleCreateRoom = () => {
+        const roomID = v4();
+        setCreatedRoomID(roomID)
+        navigate(`/room/${roomID}`)
+    }
 
     return (
         <div className='main-page' ref={rootNode}>
@@ -36,7 +42,7 @@ export const Main = () => {
                               onRoomSelected={ () => navigate(`/room/${ roomID }`) }/>
                 ))}
             </div>
-            <button className='create-room-btn' onClick={() => navigate(`/room/${v4()}`)}>
+            <button className='create-room-btn' onClick={handleCreateRoom}>
                 Create New Room
             </button>
         </div>

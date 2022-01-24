@@ -13,7 +13,9 @@ const {
     RELAY_SDP,
     RELAY_ICE,
     SESSION_DESCRIPTION,
-    ICE_CANDIDATE
+    ICE_CANDIDATE,
+    DISCONNECTED,
+    DELETE_USER
 } = require('./src/socket/socket-actions')
 
 const PORT = process.env.PORT ?? 80
@@ -30,6 +32,8 @@ function shareRoomsInfo() {
     })
 }
 
+const roomOwners = new Map();
+
 io.on('connection', socket => {
     shareRoomsInfo()
 
@@ -43,23 +47,47 @@ io.on('connection', socket => {
 
         const clients = Array.from(io.sockets.adapter.rooms.get(roomID) || [])
 
-        clients.forEach(clientID => {
-            io.to(clientID).emit(ADD_PEER, {
-                peerID: socket.id,
-                createOffer: false
-            })
+        if (clients.length === 0) {
+            roomOwners.set(roomID, socket.id)
+        } else {
+            clients.forEach(clientID => {
+                io.to(clientID).emit(ADD_PEER, {
+                    peerID: socket.id,
+                    createOffer: false
+                })
 
-            socket.emit(ADD_PEER, {
-                peerID: clientID,
-                createOffer: true,
+                socket.emit(ADD_PEER, {
+                    peerID: clientID,
+                    createOffer: true,
+                })
             })
-        })
+        }
 
         socket.join(roomID)
         shareRoomsInfo()
     })
 
+    function disconnectAll(roomID) {
+        io.sockets.sockets.forEach((socket, id) => {
+            socket.emit(DISCONNECTED)
+            socket.leave(roomID)
+        })
+    }
+
+    function getByValue(map, searchValue) {
+        for (let [key, value] of map.entries()) {
+            if (value === searchValue)
+                return key;
+        }
+    }
+
     function leaveRoom() {
+        const roomID = getByValue(roomOwners, socket.id)
+        if (roomID) {
+            disconnectAll(roomID)
+            return
+        }
+
         const {rooms} = socket
 
         Array.from(rooms)
@@ -99,31 +127,29 @@ io.on('connection', socket => {
             peerID: socket.id,
             iceCandidate,
         })
+
     })
 
-    socket.on('delete-user', ({ userID }) => {
-        const {rooms} = socket
+    socket.on(DELETE_USER, ({ userID, roomID }) => {
+        if (roomOwners.get(roomID) !== socket.id) {
+            return
+        }
 
-        Array.from(rooms)
-            .filter(roomID => validate(roomID) && version(roomID) === 4)
-            .forEach(roomID => {
-                const clients = Array.from(io.sockets.adapter.rooms.get(roomID) || [])
+        const clients = Array.from(io.sockets.adapter.rooms.get(roomID) || [])
+        clients.forEach(
+            client => io
+                .to(client)
+                .emit(REMOVE_PEER, {
+                    peerID: userID
+                })
+        )
 
-                clients
-                    .forEach(clientID => {
-                        io.to(clientID).emit(REMOVE_PEER, {
-                            peerID: userID,
-                        })
-
-                        io.to(userID).emit(REMOVE_PEER, {
-                            peerID: clientID,
-                        })
-                    })
-
-                io.sockets.connected[userID].leave(roomID)
-            })
-
-        shareRoomsInfo()
+        io.sockets.sockets.forEach((socket, id) => {
+            if (id === userID) {
+                socket.emit(DISCONNECTED)
+                socket.leave(roomID)
+            }
+        })
     })
 
 })

@@ -1,11 +1,11 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import './styles.scss';
 import { Button } from '../Button';
 import { ImExit } from 'react-icons/im';
 import { ApplicationContext } from '../../context/ApplicationContextProvider'
 import { BsCameraVideoFill, BsCameraVideoOffFill, BsFillMicFill, BsFillMicMuteFill } from 'react-icons/bs';
 
-export const Controls = ({ toggleVideo, toggleAudio, onUserLiveTheRoom }) => {
+export const Controls = ({ toggleVideo, toggleAudio, onUserLiveTheRoom, roomID, isOwner }) => {
     const { showVideo, setShowVideo, isUnMuted, setIsUnMuted } = useContext(ApplicationContext);
 
     useEffect(() => toggleVideo(showVideo), [showVideo, toggleVideo]);
@@ -27,7 +27,7 @@ export const Controls = ({ toggleVideo, toggleAudio, onUserLiveTheRoom }) => {
                         isOn={ isUnMuted }>
                     { isUnMuted ? <BsFillMicFill className="icon"/> : <BsFillMicMuteFill className="icon"/> }
                 </Button>
-                <Button name="Leave"
+                <Button name={ isOwner ? 'End meeting' : 'Leave' }
                         onClick={onUserLiveTheRoom}>
                     <ImExit className="icon"/>
                 </Button>
